@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe - Modern Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 2rem;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        h1 {
+            background: linear-gradient(45deg, #00ff88, #00ffff, #ff00ff, #00ff88);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 4rem;
+            text-shadow: 0 0 30px rgba(0, 255, 200, 0.5);
+            letter-spacing: 4px;
+            animation: slideDown 0.8s ease-out, gradientShift 6s ease infinite;
+            font-weight: 900;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.6));
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .control-panel {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            animation: fadeIn 0.8s ease-out 0.2s backwards;
+        }
+
+        .mode-selector {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            padding: 1.2rem 2rem;
+            border-radius: 50px;
+            border: 2px solid rgba(0, 255, 136, 0.5);
+            display: flex;
+            gap: 1rem;
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.1);
+            animation: boxGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes boxGlow {
+            0%, 100% { box-shadow: 0 8px 32px rgba(0, 255, 136, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.1); }
+            50% { box-shadow: 0 8px 32px rgba(0, 255, 136, 0.5), inset 0 0 30px rgba(255, 255, 255, 0.2); }
+        }
+
+        .mode-selector button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: 2px solid transparent;
+            padding: 0.7rem 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 0.95rem;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-selector button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .mode-selector button:hover::before {
+            left: 100%;
+        }
+
+        .mode-selector button:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .mode-selector button.active {
+            background: linear-gradient(135deg, #00ff88, #00ffff);
+            color: #000;
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.2);
+            border-color: rgba(0, 255, 136, 0.5);
+            font-weight: 800;
+        }
+
+        .info-panel {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            padding: 2rem 2.5rem;
+            border-radius: 25px;
+            border: 2px solid rgba(0, 255, 136, 0.4);
+            box-shadow: 0 10px 40px rgba(0, 255, 136, 0.2), inset 0 0 30px rgba(255, 255, 255, 0.05);
+            min-width: 350px;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out 0.4s backwards, panelGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes panelGlow {
+            0%, 100% { box-shadow: 0 10px 40px rgba(0, 255, 136, 0.2), inset 0 0 30px rgba(255, 255, 255, 0.05); }
+            50% { box-shadow: 0 10px 40px rgba(0, 255, 200, 0.4), inset 0 0 40px rgba(0, 255, 136, 0.1); }
+        }
+
+        .turn-display {
+            background: linear-gradient(45deg, #00ff88, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.4));
+        }
+
+        .status-message {
+            color: #ffdf00;
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin-top: 1rem;
+            text-shadow: 0 0 20px rgba(255, 223, 0, 0.6);
+            animation: pulse 0.6s ease-in-out, neonFlicker 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 15px rgba(255, 223, 0, 0.5));
+        }
+
+        @keyframes neonFlicker {
+            0%, 100% { text-shadow: 0 0 20px rgba(255, 223, 0, 0.6); }
+            50% { text-shadow: 0 0 30px rgba(255, 223, 0, 0.9), 0 0 50px rgba(255, 0, 200, 0.4); }
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            grid-template-rows: repeat(3, 120px);
+            gap: 15px;
+            padding: 2.5rem;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            border-radius: 35px;
+            border: 3px solid rgba(0, 255, 136, 0.4);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), inset 0 0 40px rgba(0, 255, 136, 0.1), 0 0 40px rgba(0, 255, 136, 0.2);
+            animation: fadeIn 0.8s ease-out 0.2s backwards, boardGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes boardGlow {
+            0%, 100% { 
+                box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), inset 0 0 40px rgba(0, 255, 136, 0.1), 0 0 40px rgba(0, 255, 136, 0.2);
+                border-color: rgba(0, 255, 136, 0.4);
+            }
+            50% { 
+                box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), inset 0 0 50px rgba(0, 255, 200, 0.15), 0 0 60px rgba(0, 255, 136, 0.4);
+                border-color: rgba(0, 255, 136, 0.7);
+            }
+        }
+
+        .cell {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.05), rgba(0, 255, 200, 0.05));
+            border: 2.5px solid rgba(0, 255, 136, 0.3);
+            border-radius: 18px;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(0, 255, 136, 0.1);
+            position: relative;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .cell::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 255, 136, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .cell:not([data-value]):not([data-value=""]):hover::after {
+            opacity: 1;
+        }
+
+        .cell:not([data-value]) {
+            cursor: pointer;
+        }
+
+        .cell[data-value=""] {
+            cursor: pointer;
+        }
+
+        .cell:not([data-value=""]):not([data-value="X"]):not([data-value="O"]) {
+            cursor: not-allowed;
+        }
+
+        .cell[data-value]:not([data-value=""]) {
+            cursor: not-allowed;
+        }
+
+        .cell:hover:not([data-value]):not([data-value=""]) {
+            transform: scale(1.12) translateY(-8px);
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 255, 200, 0.15));
+            box-shadow: 0 12px 40px rgba(0, 255, 136, 0.4), inset 0 0 30px rgba(0, 255, 136, 0.2);
+            border-color: rgba(0, 255, 136, 0.6);
+        }
+
+        .cell.x {
+            color: #ff1493;
+            text-shadow: 0 0 30px rgba(255, 20, 147, 0.8), 0 0 60px rgba(255, 20, 147, 0.4);
+            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 0 20px rgba(255, 20, 147, 0.6));
+        }
+
+        .cell.o {
+            color: #00ffff;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 0 0 60px rgba(0, 255, 255, 0.4);
+            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.6));
+        }
+
+        .cell.winner {
+            animation: glow 0.6s ease-in-out infinite;
+            background: linear-gradient(135deg, rgba(255, 223, 0, 0.15), rgba(255, 0, 200, 0.15));
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 25px rgba(255, 223, 0, 0.6), inset 0 0 25px rgba(255, 223, 0, 0.2), 0 8px 25px rgba(0, 0, 0, 0.3);
+                border-color: rgba(255, 223, 0, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 50px rgba(255, 223, 0, 1), inset 0 0 40px rgba(255, 223, 0, 0.4), 0 8px 40px rgba(255, 20, 147, 0.5);
+                border-color: rgba(255, 223, 0, 0.8);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .restart-btn, .undo-btn {
+            background: linear-gradient(135deg, #00ff88, #00ffff);
+            color: #000;
+            border: 2px solid rgba(0, 255, 136, 0.5);
+            padding: 1.1rem 3rem;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 10px 35px rgba(0, 255, 136, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.3);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            letter-spacing: 1.5px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .restart-btn::before, .undo-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .restart-btn:hover::before, .undo-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .undo-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: rgba(102, 126, 234, 0.5);
+            box-shadow: 0 10px 35px rgba(102, 126, 234, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .restart-btn:hover, .undo-btn:hover {
+            transform: translateY(-6px) scale(1.08);
+            box-shadow: 0 18px 50px rgba(0, 255, 136, 0.6), inset 0 0 30px rgba(255, 255, 255, 0.4);
+        }
+
+        .restart-btn:active, .undo-btn:active {
+            transform: translateY(-2px) scale(0.96);
+        }
+
+        .sound-toggle {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2.5px solid rgba(0, 255, 136, 0.4);
+            color: #00ff88;
+            padding: 0.7rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 0.95rem;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+            letter-spacing: 1px;
+        }
+
+        .sound-toggle:hover {
+            background: rgba(0, 255, 136, 0.2);
+            transform: scale(1.08) translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+            border-color: rgba(0, 255, 136, 0.7);
+        }
+
+        .sound-toggle.active {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.3), rgba(0, 255, 200, 0.3));
+            border-color: rgba(0, 255, 136, 0.8);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.5), inset 0 0 20px rgba(0, 255, 136, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+                letter-spacing: 2px;
+            }
+
+            .game-board {
+                grid-template-columns: repeat(3, 90px);
+                grid-template-rows: repeat(3, 90px);
+                gap: 12px;
+                padding: 1.5rem;
+            }
+
+            .cell {
+                font-size: 2rem;
+            }
+
+            .info-panel {
+                min-width: 280px;
+                padding: 1.5rem 2rem;
+            }
+
+            .turn-display {
+                font-size: 1.3rem;
+            }
+
+            .status-message {
+                font-size: 1.4rem;
+            }
+
+            .restart-btn, .undo-btn {
+                padding: 0.9rem 2rem;
+                font-size: 1rem;
+            }
+
+            body {
+                gap: 1rem;
+            }
+
+            .container {
+                gap: 1.3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+                letter-spacing: 1px;
+            }
+
+            .game-board {
+                grid-template-columns: repeat(3, 70px);
+                grid-template-rows: repeat(3, 70px);
+                gap: 10px;
+                padding: 1rem;
+            }
+
+            .cell {
+                font-size: 1.5rem;
+                border-radius: 12px;
+            }
+
+            .info-panel {
+                min-width: 220px;
+                padding: 1rem 1.5rem;
+            }
+
+            .turn-display {
+                font-size: 1rem;
+            }
+
+            .status-message {
+                font-size: 1.2rem;
+                margin-top: 0.5rem;
+            }
+
+            .restart-btn, .undo-btn {
+                padding: 0.7rem 1.3rem;
+                font-size: 0.9rem;
+                letter-spacing: 0.5px;
+            }
+
+            .sound-toggle {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .mode-selector {
+                padding: 0.8rem 1rem;
+                gap: 0.5rem;
+            }
+
+            .mode-selector button {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TIC TAC TOE</h1>
+        
+        <div class="control-panel">
+            <div class="mode-selector">
+                <button id="pvpBtn" class="active">Player vs Player</button>
+                <button id="aiBtn">vs Computer</button>
+            </div>
+            <button class="sound-toggle active" id="soundToggle">🔊 Sound ON</button>
+        </div>
+
+        <div class="info-panel">
+            <div class="turn-display" id="turnDisplay">Player X's Turn</div>
+            <div class="status-message" id="statusMessage"></div>
+        </div>
+
+        <div class="game-board" id="gameBoard">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <div class="button-group">
+            <button class="restart-btn" id="restartBtn">🔄 Restart Game</button>
+            <button class="undo-btn" id="undoBtn">↶ Undo Move</button>
+        </div>
+    </div>
+
+    <script>
+        class TicTacToe {
+            constructor() {
+                this.board = Array(9).fill('');
+                this.currentPlayer = 'X';
+                this.gameActive = true;
+                this.gameMode = 'pvp'; // 'pvp' or 'ai'
+                this.soundEnabled = true;
+                this.moveHistory = [];
+                this.winningCells = [];
+
+                this.winningCombinations = [
+                    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                    [0, 4, 8], [2, 4, 6]              // Diagonals
+                ];
+
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.createAudioContext();
+                this.loadWinSound();
+                this.render();
+            }
+
+            loadWinSound() {
+                this.winAudio = new Audio('win-sound.mp3.mp3');
+                this.winAudio.volume = 0.6;
+            }
+
+            setupEventListeners() {
+                document.getElementById('restartBtn').addEventListener('click', () => this.restart());
+                document.getElementById('undoBtn').addEventListener('click', () => this.undo());
+                document.getElementById('pvpBtn').addEventListener('click', () => this.setGameMode('pvp'));
+                document.getElementById('aiBtn').addEventListener('click', () => this.setGameMode('ai'));
+                document.getElementById('soundToggle').addEventListener('click', () => this.toggleSound());
+
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.addEventListener('click', (e) => this.handleCellClick(e.target));
+                });
+            }
+
+            createAudioContext() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            playSound(frequency = 520, duration = 100) {
+                if (!this.soundEnabled) return;
+
+                try {
+                    if (this.audioContext.state === 'suspended') {
+                        this.audioContext.resume();
+                    }
+
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = 'sine';
+
+                    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
+
+                    oscillator.start(this.audioContext.currentTime);
+                    oscillator.stop(this.audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    console.log('Audio playback error:', e);
+                }
+            }
+
+            playWinSound() {
+                if (!this.winAudio) return;
+
+                try {
+                    // Stop if already playing
+                    this.winAudio.currentTime = 0;
+                    this.winAudio.play().catch(e => console.log('win-sound.mp3.mp3', e));
+                } catch (e) {
+                    console.log('win-sound.mp3.mp3', e);
+                }
+            }
+
+            toggleSound() {
+                this.soundEnabled = !this.soundEnabled;
+                const btn = document.getElementById('soundToggle');
+                if (this.soundEnabled) {
+                    btn.textContent = '🔊 Sound ON';
+                    btn.classList.add('active');
+                    this.playSound(520, 100);
+                } else {
+                    btn.textContent = '🔇 Sound OFF';
+                    btn.classList.remove('active');
+                }
+            }
+
+            setGameMode(mode) {
+                this.gameMode = mode;
+                document.getElementById('pvpBtn').classList.toggle('active', mode === 'pvp');
+                document.getElementById('aiBtn').classList.toggle('active', mode === 'ai');
+                this.restart();
+            }
+
+            handleCellClick(cell) {
+                const index = parseInt(cell.dataset.index);
+
+                if (this.board[index] !== '' || !this.gameActive) {
+                    return;
+                }
+
+                this.makeMove(index, this.currentPlayer);
+
+                if (this.gameMode === 'ai' && this.gameActive && this.currentPlayer === 'O') {
+                    setTimeout(() => this.makeAIMove(), 600);
+                }
+            }
+
+            makeMove(index, player) {
+                this.board[index] = player;
+                this.moveHistory.push(index);
+                this.playSound(player === 'X' ? 520 : 660, 150);
+
+                const result = this.checkGameStatus();
+
+                if (result.winner) {
+                    this.gameActive = false;
+                    this.winningCells = result.winningCells;
+                    this.highlightWinningCells();
+                    this.playWinSound();
+                } else if (result.isDraw) {
+                    this.gameActive = false;
+                    this.playSound(400, 100);
+                    this.playSound(400, 100);
+                } else {
+                    this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+                }
+
+                this.render();
+            }
+
+            makeAIMove() {
+                if (!this.gameActive) return;
+
+                const availableMoves = this.board
+                    .map((cell, index) => cell === '' ? index : null)
+                    .filter(val => val !== null);
+
+                if (availableMoves.length === 0) return;
+
+                const bestMove = this.getBestAIMove(availableMoves);
+                this.makeMove(bestMove, 'O');
+            }
+
+            getBestAIMove(availableMoves) {
+                // Check if AI can win
+                for (let move of availableMoves) {
+                    this.board[move] = 'O';
+                    if (this.checkWinner('O')) {
+                        this.board[move] = '';
+                        return move;
+                    }
+                    this.board[move] = '';
+                }
+
+                // Check if need to block player
+                for (let move of availableMoves) {
+                    this.board[move] = 'X';
+                    if (this.checkWinner('X')) {
+                        this.board[move] = '';
+                        return move;
+                    }
+                    this.board[move] = '';
+                }
+
+                // Take center if available
+                if (availableMoves.includes(4)) return 4;
+
+                // Take corners
+                const corners = [0, 2, 6, 8].filter(i => availableMoves.includes(i));
+                if (corners.length > 0) return corners[Math.floor(Math.random() * corners.length)];
+
+                // Take any available
+                return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+            }
+
+            checkWinner(player) {
+                return this.winningCombinations.some(combination =>
+                    combination.every(index => this.board[index] === player)
+                );
+            }
+
+            checkGameStatus() {
+                for (let combination of this.winningCombinations) {
+                    const [a, b, c] = combination;
+                    if (this.board[a] && this.board[a] === this.board[b] && this.board[b] === this.board[c]) {
+                        return { winner: this.board[a], isDraw: false, winningCells: combination };
+                    }
+                }
+
+                if (this.board.every(cell => cell !== '')) {
+                    return { winner: null, isDraw: true, winningCells: [] };
+                }
+
+                return { winner: null, isDraw: false, winningCells: [] };
+            }
+
+            highlightWinningCells() {
+                this.winningCells.forEach(index => {
+                    document.querySelector(`[data-index="${index}"]`).classList.add('winner');
+                });
+            }
+
+            undo() {
+                if (this.moveHistory.length === 0 || !this.gameActive) {
+                    if (this.winningCells.length > 0) {
+                        this.gameActive = true;
+                        this.winningCells.forEach(index => {
+                            document.querySelector(`[data-index="${index}"]`).classList.remove('winner');
+                        });
+                        this.winningCells = [];
+                    } else {
+                        return;
+                    }
+                }
+
+                if (this.gameActive) {
+                    const lastMove = this.moveHistory.pop();
+                    this.board[lastMove] = '';
+                    this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+                    this.playSound(300, 100);
+                    this.render();
+                }
+            }
+
+            restart() {
+                this.board = Array(9).fill('');
+                this.currentPlayer = 'X';
+                this.gameActive = true;
+                this.moveHistory = [];
+                this.winningCells = [];
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.classList.remove('winner', 'x', 'o');
+                });
+                this.render();
+            }
+
+            render() {
+                const cells = document.querySelectorAll('.cell');
+                cells.forEach((cell, index) => {
+                    const value = this.board[index];
+                    cell.textContent = value;
+                    cell.classList.remove('x', 'o');
+                    if (value === 'X') cell.classList.add('x');
+                    if (value === 'O') cell.classList.add('o');
+                });
+
+                this.updateUI();
+            }
+
+            updateUI() {
+                const statusMsg = document.getElementById('statusMessage');
+                const turnDisplay = document.getElementById('turnDisplay');
+
+                if (!this.gameActive) {
+                    const result = this.checkGameStatus();
+                    if (result.winner) {
+                        const playerName = this.gameMode === 'ai' && result.winner === 'O' ? 'Computer' : `Player ${result.winner}`;
+                        statusMsg.textContent = `${playerName} Wins! 🎉`;
+                        turnDisplay.textContent = '✨ Game Over!';
+                    } else if (result.isDraw) {
+                        statusMsg.textContent = "It's a Draw! 🤝";
+                        turnDisplay.textContent = '🎲 Game Over!';
+                    }
+                } else {
+                    statusMsg.textContent = '';
+                    const playerName = this.gameMode === 'ai' && this.currentPlayer === 'O' ? 'Computer' : `Player ${this.currentPlayer}`;
+                    turnDisplay.textContent = `${playerName}'s Turn`;
+                }
+            }
+        }
+
+        // Initialize game when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new TicTacToe();
+        });
+    </script>
+</body>
+</html>
